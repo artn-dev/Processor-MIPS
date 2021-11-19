@@ -60,6 +60,17 @@ wire aluout_load;
 wire [31:0] aluout_in;
 wire [31:0] aluout_out;
 
+wire [31:0] concat_out;
+
+// MUX
+wire mux_memdata;
+wire mux_alusrcA;
+wire [1:0] mux_pcin;
+wire [1:0] mux_IorD;
+wire [1:0] mux_regdst;
+wire [2:0] mux_mem2reg;
+wire [1:0] mux_alusrcB;
+
 
 //****************************************************************************//
 //                                 Componentes                                //
@@ -74,9 +85,19 @@ Registrador PC(
 );
 
 MUX4x1 mux0(
+  pc_out,
+  alu_out,
+  regA_out,
+  regB_out,
+  mux_IorD,
+  mem_addr
 );
 
 MUX2x1 mux1(
+  regB_out,
+  0,            // TODO salvar meia-palavra/byte
+  mux_memdata,
+  mem_in
 );
 
 Memoria MEM(
@@ -98,9 +119,24 @@ Instr_Reg IR(
 );
 
 MUX4x1_5b mux2(
+  ins_rt,
+  ins_imm[15:11],
+  5'd29,
+  5'd31,
+  mux_regdst,
+  reg_wreg
 );
 
 MUX7x1 mux3(
+  0,                    // TODO ler memória
+  alu_out,
+  0,                    // TODO ler imediato
+  0,                    // TODO implementar multiplicação/divisão
+  0,                    // TODO ler flags da ULA
+  0,                    // TODO implementar shift
+  227,
+  mux_mem2reg,
+  reg_wdata
 );
 
 Banco_reg REG(
@@ -132,9 +168,19 @@ Registrador B(
 );
 
 MUX2x1 mux4(
+  pc_out,
+  regA_out,
+  mux_alusrcA,
+  alu_srcA
 );
 
 MUX4x1 mux5(
+  regB_out,
+  4,
+  0,                    // TODO ler imediatos
+  0,                    // TODO ler offsets
+  mux_alusrcB,
+  alu_srcB
 );
 
 Ula32 ALU(
@@ -159,6 +205,12 @@ Registrador ALUout(
 );
 
 MUX4x1 mux6(
+  alu_out,
+  alutout_out,
+  concat_out,
+  0,                    // TODO implementar EPC
+  mux_pcin,
+  pc_in
 );
 
 endmodule
