@@ -18,6 +18,7 @@ wire [31:0] mem_in;
 wire [31:0] mem_out;
 
 // Registro de Instruções
+wire ins_load;
 wire [31:0] ins_in;
 wire [5:0]  ins_opcode;
 wire [4:0]  ins_rs;
@@ -116,11 +117,12 @@ assign ins_in = mem_out;
 Instr_Reg IR(
   clk,
   rst,
+  ins_load,
   ins_in,
   ins_opcode,
-  inst_rs,
-  inst_rt,
-  inst_imm
+  ins_rs,
+  ins_rt,
+  ins_imm
 );
 
 assign concat_insaddr = { ins_rs, ins_rt, ins_imm };
@@ -224,7 +226,7 @@ Registrador ALUout(
 
 MUX4x1 mux6(
   alu_out,
-  alutout_out,
+  aluout_out,
   concat_out,
   0,                    // TODO implementar EPC
   mux_pcin,
