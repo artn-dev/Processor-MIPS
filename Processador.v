@@ -60,6 +60,9 @@ wire aluout_load;
 wire [31:0] aluout_in;
 wire [31:0] aluout_out;
 
+// Concatenador
+wire [25:0] concat_insaddr;
+wire [27:0] concat_in;
 wire [31:0] concat_out;
 
 // MUX
@@ -108,6 +111,8 @@ Memoria MEM(
   mem_out
 );
 
+assign ins_in = mem_out;
+
 Instr_Reg IR(
   clk,
   rst,
@@ -117,6 +122,10 @@ Instr_Reg IR(
   inst_rt,
   inst_imm
 );
+
+assign concat_insaddr = { ins_rs, ins_rt, ins_imm };
+assign concat_in  = concat_insaddr << 2;
+assign concat_out = { pc_out[31:28], concat_in };
 
 MUX4x1_5b mux2(
   ins_rt,
@@ -139,6 +148,9 @@ MUX7x1 mux3(
   reg_wdata
 );
 
+assign reg_rreg1 = ins_rs;
+assign reg_rreg2 = ins_rt;
+
 Banco_reg REG(
   clk,
   rst,
@@ -151,6 +163,8 @@ Banco_reg REG(
   reg_rdata2
 );
 
+assign regA_in = reg_rdata1;
+
 Registrador A(
   clk,
   rst,
@@ -158,6 +172,8 @@ Registrador A(
   regA_in,
   regA_out
 );
+
+assign regB_in = reg_rdata2;
 
 Registrador B(
   clk,
@@ -195,6 +211,8 @@ Ula32 ALU(
   alu_gt,
   alu_lt
 );
+
+assign aluout_in = alu_out;
 
 Registrador ALUout(
   clk,
