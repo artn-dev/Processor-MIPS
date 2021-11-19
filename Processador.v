@@ -255,4 +255,25 @@ MUX4x1 mux6(
   pc_in
 );
 
+always @(posedge clk, posedge rst) begin
+  if (rst) begin
+    rpc_load     <= 0;
+    rmem_write   <= 0;
+    rins_load    <= 0;
+    rreg_write   <= 0;
+    rregA_load   <= 0;
+    rregB_load   <= 0;
+    raluout_load <= 0;
+    rmux_memdata <= 0;
+    rmux_alusrcA <= 0;
+    rmux_pcin    <= 0;
+    rmux_IorD    <= 0;
+    rmux_regdst  <= 0;
+    rmux_alusrcB <= 0;
+    rmux_mem2reg <= 0;
+    ralu_op      <= 0;
+    state        <= 0;
+  end
+end
+
 endmodule
