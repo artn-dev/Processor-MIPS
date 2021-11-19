@@ -89,7 +89,7 @@ Memoria MEM(
 Instr_Reg IR(
   clk,
   rst,
-  ins_in
+  ins_in,
   ins_opcode,
   inst_rs,
   inst_rt,
