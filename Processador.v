@@ -5,6 +5,7 @@ module Processador(
 //****************************************************************************//
 //                         Declarações de Registros                         //
 //****************************************************************************//
+
 reg rpc_load;
 reg rmem_write;
 reg rins_load;
@@ -254,6 +255,25 @@ MUX4x1 mux6(
   mux_pcin,
   pc_in
 );
+
+
+assign pc_load     = rpc_load;
+assign mem_write   = rmem_write;
+assign ins_load    = rins_load;
+assign reg_write   = rreg_write;
+assign regA_load   = rregA_load;
+assign regB_load   = rregB_load;
+assign aluout_load = raluout_load;
+assign mux_memdata = rmux_memdata;
+assign mux_alusrcA = rmux_alusrcA;
+assign mux_pcin    = rmux_pcin;
+assign mux_IorD    = rmux_IorD;
+assign mux_regdst  = rmux_regdst;
+assign mux_alusrcB = rmux_alusrcB;
+assign mux_mem2reg = rmux_mem2reg;
+assign alu_op      = ralu_op;
+
+
 
 always @(posedge clk, posedge rst) begin
   if (rst) begin
