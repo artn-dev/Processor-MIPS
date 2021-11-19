@@ -47,6 +47,7 @@ wire [31:0] regB_out;
 wire [31:0] alu_srcA;
 wire [31:0] alu_srcB;
 wire [2:0]  alu_op;
+wire [31:0] alu_out;
 wire alu_overflow;
 wire alu_neg;
 wire alu_zero;
@@ -140,6 +141,7 @@ Ula32 ALU(
   alu_srcA,
   alu_srcB,
   alu_op,
+  alu_out,
   alu_overflow,
   alu_neg,
   alu_zero,
