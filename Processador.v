@@ -3,6 +3,28 @@ module Processador(
 );
 
 //****************************************************************************//
+//                         Declarações de Registros                         //
+//****************************************************************************//
+reg rpc_load;
+reg rmem_write;
+reg rins_load;
+reg rreg_write;
+reg rregA_load;
+reg rregB_load;
+reg raluout_load;
+reg rmux_memdata;
+reg rmux_alusrcA;
+reg [1:0] rmux_pcin;
+reg [1:0] rmux_IorD;
+reg [1:0] rmux_regdst;
+reg [1:0] rmux_alusrcB;
+reg [2:0] rmux_mem2reg;
+reg [2:0] ralu_op;
+
+reg state;
+
+
+//****************************************************************************//
 //                            Declarações de Fios                           //
 //****************************************************************************//
 
@@ -72,8 +94,8 @@ wire mux_alusrcA;
 wire [1:0] mux_pcin;
 wire [1:0] mux_IorD;
 wire [1:0] mux_regdst;
-wire [2:0] mux_mem2reg;
 wire [1:0] mux_alusrcB;
+wire [2:0] mux_mem2reg;
 
 
 //****************************************************************************//
