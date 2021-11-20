@@ -11,11 +11,12 @@ parameter START     = 4'b0001;
 parameter READ_MEM1 = 4'b0010;
 parameter READ_MEM2 = 4'b0011;
 parameter READ_MEM3 = 4'b0100;
-parameter CALC_PC1  = 4'b0101;
-parameter CALC_PC2  = 4'b0110;
-parameter SAVE_MEM1 = 4'b0111;
-parameter SAVE_MEM2 = 4'b1000;
-parameter ADD       = 4'b1001;
+parameter DECODE    = 4'b0101;
+parameter CALC_PC1  = 4'b0110;
+parameter CALC_PC2  = 4'b0111;
+parameter SAVE_MEM1 = 4'b1000;
+parameter SAVE_MEM2 = 4'b1001;
+parameter ADD       = 4'b1010;
 
 
 //****************************************************************************//
