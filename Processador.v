@@ -87,6 +87,8 @@ wire [31:0] regB_out;
 // ULA
 wire [31:0] alu_srcA;
 wire [31:0] alu_srcB;
+wire [31:0] alu_imm;
+wire [31:0] alu_offset;
 wire [2:0]  alu_op;
 wire [31:0] alu_out;
 wire alu_overflow;
@@ -232,11 +234,14 @@ MUX2x1 mux4(
   alu_srcA
 );
 
+assign alu_imm = { 16'd0, ins_imm };
+assign alu_offset = alu_imm << 2;
+
 MUX4x1 mux5(
   regB_out,
   4,
-  0,                    // TODO ler imediatos
-  0,                    // TODO ler offsets
+  alu_imm,
+  alu_offset,
   mux_alusrcB,
   alu_srcB
 );
