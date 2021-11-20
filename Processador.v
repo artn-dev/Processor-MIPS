@@ -462,7 +462,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 0;
         rmux_mem2reg <= 0;
         ralu_op      <= 0;
-        state        <= 0;
+        state        <= ADD;
       end
 
       ADD: begin
@@ -481,7 +481,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 0;
         rmux_mem2reg <= 0;
         ralu_op      <= 1;
-        state        <= 0;
+        state        <= SAVE_MEM1;
       end
 
       SAVE_MEM1: begin
@@ -500,7 +500,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 0;
         rmux_mem2reg <= 1;
         ralu_op      <= 0;
-        state        <= 0;
+        state        <= SAVE_MEM2;
       end
 
       SAVE_MEM2: begin
