@@ -1,6 +1,6 @@
-module MUX4x1 (
-    input  wire [31:0] a, b, c, d, e, f ,g,
-    input  wire [1:0] sel,
+module MUX7x1 (
+    input  wire [31:0] a, b, c, d, e, f, g,
+    input  wire [2:0] sel,
     output wire [31:0] out
 );
 

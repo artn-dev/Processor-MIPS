@@ -1,6 +1,6 @@
 module MUX3x1 (
     // Inputs
-    input  wire [31:0] a, b, c
+    input  wire [31:0] a, b, c,
     input  wire [1:0] sel,
 
     // Output

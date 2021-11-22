@@ -1,4 +1,4 @@
-module MUX4x1 (
+module MUX4x1_5b (
     input  wire [4:0] a, b, c, d,
     input  wire [1:0] sel,
     output wire [4:0] out
