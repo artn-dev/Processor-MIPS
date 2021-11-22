@@ -228,8 +228,8 @@ Registrador B(
 );
 
 MUX2x1 mux4(
-  pc_out,
   regA_out,
+  pc_out,
   mux_alusrcA,
   alu_srcA
 );
