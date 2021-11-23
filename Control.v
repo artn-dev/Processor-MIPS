@@ -30,8 +30,10 @@ parameter CALC_PC2  = 4'b0111;
 parameter CALC_PC3  = 4'b1000;
 parameter SAVE_MEM1 = 4'b1001;
 parameter SAVE_MEM2 = 4'b1010;
+
 parameter ADDI      = 4'b1011;
 parameter ALU_INST  = 4'b1100;
+parameter LUI       = 4'b1001;
 
 
 reg rpc_load;
@@ -260,7 +262,10 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 3;
         rmux_mem2reg <= 0;
         ralu_op      <= 1;
-        state        <= (opcode == 0) ? ALU_INST : ADDI;
+        state        <= (opcode == 6'h0) ? ALU_INST :
+                        (opcode == 6'h8) ? ADDI :
+                        (opcode == 6'hf) ? LUI :
+                        0;
       end
 
       SAVE_MEM1: begin
@@ -277,7 +282,7 @@ always @(posedge clk, posedge rst) begin
         rmux_IorD    <= 0;
         rmux_regdst  <= (opcode == 0) ? 1 : 0;
         rmux_alusrcB <= 0;
-        rmux_mem2reg <= 1;
+        rmux_mem2reg <= (opcode == 6'hf) ? 2 : 1;
         ralu_op      <= 0;
         state        <= SAVE_MEM2;
       end
@@ -296,7 +301,7 @@ always @(posedge clk, posedge rst) begin
         rmux_IorD    <= 0;
         rmux_regdst  <= (opcode == 0) ? 1 : 0;
         rmux_alusrcB <= 0;
-        rmux_mem2reg <= 1;
+        rmux_mem2reg <= (opcode == 6'hf) ? 2 : 1;
         ralu_op      <= 0;
         state        <= READ_MEM1;
       end

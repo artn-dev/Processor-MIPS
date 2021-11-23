@@ -175,7 +175,7 @@ MUX4x1_5b mux2(
 MUX7x1 mux3(
   0,                    // TODO ler memória
   aluout_out,
-  0,                    // TODO ler imediato
+  { 16'd0, ins_imm },
   0,                    // TODO implementar multiplicação/divisão
   0,                    // TODO ler flags da ULA
   0,                    // TODO implementar shift
