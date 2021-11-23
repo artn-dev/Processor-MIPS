@@ -13,6 +13,11 @@ wire [31:0] mem_addr;
 wire [31:0] mem_in;
 wire [31:0] mem_out;
 
+// MDR
+wire mdr_load;
+wire [31:0] mdr_in;
+wire [31:0] mdr_out;
+
 // Registro de Instruções
 wire ins_load;
 wire [31:0] ins_in;
@@ -133,6 +138,15 @@ Memoria MEM(
 );
 
 assign ins_in = mem_out;
+assign mdr_in = mem_out;
+
+Registrador MDR(
+  clk,
+  rst,
+  mdr_load,
+  mdr_in,
+  mdr_out
+);
 
 Instr_Reg IR(
   clk,
