@@ -81,6 +81,7 @@ wire [2:0] mux_mem2reg;
 Control CTRL(
   clk,
   rst,
+  ins_opcode,
   pc_load,
   mem_write,
   ins_load,
