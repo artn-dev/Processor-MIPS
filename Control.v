@@ -1,6 +1,7 @@
 module Control(
 	input  wire clk, rst,
         input  wire [5:0] opcode,
+        input  wire [5:0] funct,
 	output wire pc_load,
 	output wire mem_write,
 	output wire ins_load,
@@ -334,7 +335,10 @@ always @(posedge clk, posedge rst) begin
         rmux_regdst  <= 0;
         rmux_alusrcB <= 0;
         rmux_mem2reg <= 0;
-        ralu_op      <= 1;
+        ralu_op      <= (funct == 6'h20) ? 1 :
+                        (funct == 6'h22) ? 2 :
+                        (funct == 6'h24) ? 3 :
+                        0;
         state        <= SAVE_MEM1;
       end
 

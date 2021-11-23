@@ -82,6 +82,7 @@ Control CTRL(
   clk,
   rst,
   ins_opcode,
+  ins_imm[5:0],
   pc_load,
   mem_write,
   ins_load,
