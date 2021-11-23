@@ -26,8 +26,9 @@ parameter DECODE    = 4'b0101;
 parameter CALC_PC1  = 4'b0110;
 parameter CALC_PC2  = 4'b0111;
 parameter CALC_PC3  = 4'b1000;
-parameter SAVE_MEM  = 4'b1001;
-parameter ADD       = 4'b1010;
+parameter SAVE_MEM1 = 4'b1001;
+parameter SAVE_MEM2 = 4'b1010;
+parameter ADD       = 4'b1011;
 
 
 reg rpc_load;
@@ -275,10 +276,29 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 2;
         rmux_mem2reg <= 0;
         ralu_op      <= 1;
-        state        <= SAVE_MEM;
+        state        <= SAVE_MEM1;
       end
 
-      SAVE_MEM: begin
+      SAVE_MEM1: begin
+        rpc_load     <= 0;
+        rmem_write   <= 0;
+        rins_load    <= 0;
+        rreg_write   <= 1;
+        rregA_load   <= 0;
+        rregB_load   <= 0;
+        raluout_load <= 0;
+        rmux_memdata <= 0;
+        rmux_alusrcA <= 0;
+        rmux_pcin    <= 0;
+        rmux_IorD    <= 0;
+        rmux_regdst  <= 0;
+        rmux_alusrcB <= 0;
+        rmux_mem2reg <= 1;
+        ralu_op      <= 0;
+        state        <= SAVE_MEM2;
+      end
+
+      SAVE_MEM2: begin
         rpc_load     <= 0;
         rmem_write   <= 0;
         rins_load    <= 0;
