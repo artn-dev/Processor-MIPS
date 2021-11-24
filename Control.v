@@ -9,6 +9,7 @@ module Control(
 	output wire regA_load,
 	output wire regB_load,
 	output wire aluout_load,
+	output wire mdr_load,
 	output wire mux_memdata,
 	output wire mux_alusrcA,
 	output wire [1:0] mux_pcin,
@@ -20,21 +21,27 @@ module Control(
 	output wire [2:0] alu_op
 );
 
-parameter RESET     = 4'b0000;
-parameter START     = 4'b0001;
-parameter READ_MEM1 = 4'b0010;
-parameter READ_MEM2 = 4'b0011;
-parameter READ_MEM3 = 4'b0100;
-parameter DECODE    = 4'b0101;
-parameter CALC_PC1  = 4'b0110;
-parameter CALC_PC2  = 4'b0111;
-parameter CALC_PC3  = 4'b1000;
-parameter SAVE_MEM1 = 4'b1001;
-parameter SAVE_MEM2 = 4'b1010;
+parameter RESET     = 5'b00000;
+parameter START     = 5'b00001;
+parameter READ_MEM1 = 5'b00010;
+parameter READ_MEM2 = 5'b00011;
+parameter READ_MEM3 = 5'b00100;
+parameter DECODE    = 5'b00101;
+parameter CALC_PC1  = 5'b00110;
+parameter CALC_PC2  = 5'b00111;
+parameter CALC_PC3  = 5'b01000;
+parameter SAVE_MEM1 = 5'b01001;
+parameter SAVE_MEM2 = 5'b01010;
 
-parameter ADDI      = 4'b1011;
-parameter ALU_INST  = 4'b1100;
-parameter LUI       = 4'b1001;
+parameter ADDI      = 5'b01011;
+parameter ALU_INST  = 5'b01100;
+parameter LOAD1     = 5'b01101;
+parameter LOAD2     = 5'b01110;
+parameter LOAD3     = 5'b01111;
+parameter LOAD4     = 5'b10000;
+parameter LOAD5     = 5'b10001;
+
+parameter LUI       = SAVE_MEM1;
 
 
 reg rpc_load;
@@ -44,6 +51,7 @@ reg rreg_write;
 reg rregA_load;
 reg rregB_load;
 reg raluout_load;
+reg rmdr_load;
 reg rmux_memdata;
 reg rmux_alusrcA;
 reg [1:0] rmux_pcin;
@@ -54,7 +62,7 @@ reg [1:0] radjsz_ctrl;
 reg [2:0] rmux_mem2reg;
 reg [2:0] ralu_op;
 
-reg [3:0] state;
+reg [4:0] state;
 
 
 assign pc_load     = rpc_load;
@@ -73,6 +81,7 @@ assign mux_alusrcB = rmux_alusrcB;
 assign mux_mem2reg = rmux_mem2reg;
 assign alu_op      = ralu_op;
 assign adjsz_ctrl  = radjsz_ctrl;
+assign mdr_load    = rmdr_load;
 
 
 always @(posedge clk, posedge rst) begin
@@ -84,6 +93,7 @@ always @(posedge clk, posedge rst) begin
     rregA_load   <= 0;
     rregB_load   <= 0;
     raluout_load <= 0;
+    rmdr_load    <= 0;
     rmux_memdata <= 0;
     rmux_alusrcA <= 0;
     rmux_pcin    <= 0;
@@ -106,6 +116,7 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 0;
         rregB_load   <= 0;
         raluout_load <= 0;
+        rmdr_load    <= 0;
         rmux_memdata <= 0;
         rmux_alusrcA <= 0;
         rmux_pcin    <= 0;
@@ -126,6 +137,7 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 0;
         rregB_load   <= 0;
         raluout_load <= 0;
+        rmdr_load    <= 0;
         rmux_memdata <= 0;
         rmux_alusrcA <= 0;
         rmux_pcin    <= 0;
@@ -146,6 +158,7 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 0;
         rregB_load   <= 0;
         raluout_load <= 0;
+        rmdr_load    <= 1;
         rmux_memdata <= 0;
         rmux_alusrcA <= 0;
         rmux_pcin    <= 0;
@@ -166,6 +179,7 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 0;
         rregB_load   <= 0;
         raluout_load <= 0;
+        rmdr_load    <= 1;
         rmux_memdata <= 0;
         rmux_alusrcA <= 0;
         rmux_pcin    <= 0;
@@ -186,6 +200,7 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 0;
         rregB_load   <= 0;
         raluout_load <= 0;
+        rmdr_load    <= 1;
         rmux_memdata <= 0;
         rmux_alusrcA <= 0;
         rmux_pcin    <= 0;
@@ -206,6 +221,7 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 0;
         rregB_load   <= 0;
         raluout_load <= 0;
+        rmdr_load    <= 0;
         rmux_memdata <= 0;
         rmux_alusrcA <= 0;
         rmux_pcin    <= 0;
@@ -226,6 +242,7 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 0;
         rregB_load   <= 0;
         raluout_load <= 0;
+        rmdr_load    <= 0;
         rmux_memdata <= 0;
         rmux_alusrcA <= 0;
         rmux_pcin    <= 0;
@@ -246,6 +263,7 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 0;
         rregB_load   <= 0;
         raluout_load <= 0;
+        rmdr_load    <= 0;
         rmux_memdata <= 0;
         rmux_alusrcA <= 0;
         rmux_pcin    <= 0;
@@ -266,6 +284,7 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 1;
         rregB_load   <= 1;
         raluout_load <= 1;
+        rmdr_load    <= 0;
         rmux_memdata <= 0;
         rmux_alusrcA <= 0;
         rmux_pcin    <= 0;
@@ -275,9 +294,10 @@ always @(posedge clk, posedge rst) begin
         rmux_mem2reg <= 0;
         ralu_op      <= 1;
         radjsz_ctrl  <= 0;
-        state        <= (opcode == 6'h0) ? ALU_INST :
-                        (opcode == 6'h8) ? ADDI :
-                        (opcode == 6'hf) ? LUI :
+        state        <= (opcode == 6'h0)  ? ALU_INST :
+                        (opcode == 6'h8)  ? ADDI     :
+                        (opcode == 6'hf)  ? LUI      :
+			(opcode == 6'h23) ? LOAD1     :
                         0;
       end
 
@@ -289,13 +309,16 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 0;
         rregB_load   <= 0;
         raluout_load <= 0;
+        rmdr_load    <= 0;
         rmux_memdata <= 0;
         rmux_alusrcA <= 0;
         rmux_pcin    <= 0;
         rmux_IorD    <= 0;
         rmux_regdst  <= (opcode == 0) ? 1 : 0;
         rmux_alusrcB <= 0;
-        rmux_mem2reg <= (opcode == 6'hf) ? 2 : 1;
+        rmux_mem2reg <= (opcode == 6'hf)  ? 2 :
+		        (opcode == 6'h23) ? 0 :
+			1;
         ralu_op      <= 0;
         radjsz_ctrl  <= 0;
         state        <= SAVE_MEM2;
@@ -309,13 +332,16 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 0;
         rregB_load   <= 0;
         raluout_load <= 0;
+        rmdr_load    <= 0;
         rmux_memdata <= 0;
         rmux_alusrcA <= 0;
         rmux_pcin    <= 0;
         rmux_IorD    <= 0;
         rmux_regdst  <= (opcode == 0) ? 1 : 0;
         rmux_alusrcB <= 0;
-        rmux_mem2reg <= (opcode == 6'hf) ? 2 : 1;
+        rmux_mem2reg <= (opcode == 6'hf)  ? 2 :
+		        (opcode == 6'h23) ? 0 :
+			1;
         ralu_op      <= 0;
         radjsz_ctrl  <= 0;
         state        <= READ_MEM1;
@@ -329,6 +355,7 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 0;
         rregB_load   <= 0;
         raluout_load <= 1;
+        rmdr_load    <= 0;
         rmux_memdata <= 0;
         rmux_alusrcA <= 1;
         rmux_pcin    <= 0;
@@ -349,6 +376,7 @@ always @(posedge clk, posedge rst) begin
         rregA_load   <= 0;
         rregB_load   <= 0;
         raluout_load <= 1;
+        rmdr_load    <= 0;
         rmux_memdata <= 0;
         rmux_alusrcA <= 1;
         rmux_pcin    <= 0;
@@ -360,6 +388,111 @@ always @(posedge clk, posedge rst) begin
                         (funct == 6'h22) ? 2 :
                         (funct == 6'h24) ? 3 :
                         0;
+        radjsz_ctrl  <= 0;
+        state        <= SAVE_MEM1;
+      end
+
+      LOAD1: begin
+        rpc_load     <= 0;
+        rmem_write   <= 0;
+        rins_load    <= 0;
+        rreg_write   <= 0;
+        rregA_load   <= 0;
+        rregB_load   <= 0;
+        raluout_load <= 1;
+        rmdr_load    <= 0;
+        rmux_memdata <= 0;
+        rmux_alusrcA <= 1;
+        rmux_pcin    <= 0;
+        rmux_IorD    <= 0;
+        rmux_regdst  <= 0;
+        rmux_alusrcB <= 2;
+        rmux_mem2reg <= 0;
+        ralu_op      <= 1;
+        radjsz_ctrl  <= 0;
+        state        <= LOAD2;
+      end
+
+      LOAD2: begin
+        rpc_load     <= 0;
+        rmem_write   <= 0;
+        rins_load    <= 0;
+        rreg_write   <= 0;
+        rregA_load   <= 0;
+        rregB_load   <= 0;
+        raluout_load <= 0;
+        rmdr_load    <= 1;
+        rmux_memdata <= 0;
+        rmux_alusrcA <= 1;
+        rmux_pcin    <= 0;
+        rmux_IorD    <= 1;
+        rmux_regdst  <= 0;
+        rmux_alusrcB <= 2;
+        rmux_mem2reg <= 0;
+        ralu_op      <= 1;
+        radjsz_ctrl  <= 0;
+        state        <= LOAD3;
+      end
+
+      LOAD3: begin
+        rpc_load     <= 0;
+        rmem_write   <= 0;
+        rins_load    <= 0;
+        rreg_write   <= 0;
+        rregA_load   <= 0;
+        rregB_load   <= 0;
+        raluout_load <= 0;
+        rmdr_load    <= 1;
+        rmux_memdata <= 0;
+        rmux_alusrcA <= 1;
+        rmux_pcin    <= 0;
+        rmux_IorD    <= 1;
+        rmux_regdst  <= 0;
+        rmux_alusrcB <= 2;
+        rmux_mem2reg <= 0;
+        ralu_op      <= 1;
+        radjsz_ctrl  <= 0;
+        state        <= LOAD4;
+      end
+
+      LOAD4: begin
+        rpc_load     <= 0;
+        rmem_write   <= 0;
+        rins_load    <= 0;
+        rreg_write   <= 0;
+        rregA_load   <= 0;
+        rregB_load   <= 0;
+        raluout_load <= 0;
+        rmdr_load    <= 1;
+        rmux_memdata <= 0;
+        rmux_alusrcA <= 1;
+        rmux_pcin    <= 0;
+        rmux_IorD    <= 0;
+        rmux_regdst  <= 0;
+        rmux_alusrcB <= 1;
+        rmux_mem2reg <= 0;
+        ralu_op      <= 1;
+        radjsz_ctrl  <= 0;
+        state        <= LOAD5;
+      end
+
+      LOAD5: begin
+        rpc_load     <= 0;
+        rmem_write   <= 1;
+        rins_load    <= 0;
+        rreg_write   <= 0;
+        rregA_load   <= 0;
+        rregB_load   <= 0;
+        raluout_load <= 0;
+        rmdr_load    <= 0;
+        rmux_memdata <= 0;
+        rmux_alusrcA <= 0;
+        rmux_pcin    <= 0;
+        rmux_IorD    <= 0;
+        rmux_regdst  <= 0;
+        rmux_alusrcB <= 1;
+        rmux_mem2reg <= 0;
+        ralu_op      <= 1;
         radjsz_ctrl  <= 0;
         state        <= SAVE_MEM1;
       end

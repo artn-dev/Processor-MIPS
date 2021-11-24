@@ -100,6 +100,7 @@ Control CTRL(
   regA_load,
   regB_load,
   aluout_load,
+  mdr_load,
   mux_memdata,
   mux_alusrcA,
   mux_pcin,
@@ -178,7 +179,7 @@ MUX4x1_5b mux2(
   reg_wreg
 );
 
-assign adjsize_in = mdr_out;
+assign adjsz_in = mdr_out;
 
 AdjSize ADJSIZE(
   adjsz_in,
@@ -187,7 +188,7 @@ AdjSize ADJSIZE(
 );
 
 MUX7x1 mux3(
-  0,                    // TODO ler memória
+  adjsz_out,
   aluout_out,
   { 16'd0, ins_imm },
   0,                    // TODO implementar multiplicação/divisão
