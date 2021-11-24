@@ -15,6 +15,7 @@ module Control(
 	output wire [1:0] mux_IorD,
 	output wire [1:0] mux_regdst,
 	output wire [1:0] mux_alusrcB,
+	output wire [1:0] adjsz_ctrl,
 	output wire [2:0] mux_mem2reg,
 	output wire [2:0] alu_op
 );
@@ -49,6 +50,7 @@ reg [1:0] rmux_pcin;
 reg [1:0] rmux_IorD;
 reg [1:0] rmux_regdst;
 reg [1:0] rmux_alusrcB;
+reg [1:0] radjsz_ctrl;
 reg [2:0] rmux_mem2reg;
 reg [2:0] ralu_op;
 
@@ -70,6 +72,7 @@ assign mux_regdst  = rmux_regdst;
 assign mux_alusrcB = rmux_alusrcB;
 assign mux_mem2reg = rmux_mem2reg;
 assign alu_op      = ralu_op;
+assign adjsz_ctrl  = radjsz_ctrl;
 
 
 always @(posedge clk, posedge rst) begin
@@ -89,6 +92,7 @@ always @(posedge clk, posedge rst) begin
     rmux_alusrcB <= 0;
     rmux_mem2reg <= 0;
     ralu_op      <= 0;
+    radjsz_ctrl  <= 0;
     state        <= START;
 
   end else begin
@@ -110,6 +114,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 0;
         rmux_mem2reg <= 6;
         ralu_op      <= 0;
+        radjsz_ctrl  <= 0;
         state        <= RESET;
       end
 
@@ -129,6 +134,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 0;
         rmux_mem2reg <= 0;
         ralu_op      <= 0;
+        radjsz_ctrl  <= 0;
         state        <= READ_MEM1;
       end
 
@@ -148,6 +154,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 1;
         rmux_mem2reg <= 0;
         ralu_op      <= 1;
+        radjsz_ctrl  <= 0;
         state        <= READ_MEM2;
       end
 
@@ -167,6 +174,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 1;
         rmux_mem2reg <= 0;
         ralu_op      <= 1;
+        radjsz_ctrl  <= 0;
         state        <= READ_MEM3;
       end
 
@@ -186,6 +194,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 1;
         rmux_mem2reg <= 0;
         ralu_op      <= 1;
+        radjsz_ctrl  <= 0;
         state        <= DECODE;
       end
 
@@ -205,6 +214,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 1;
         rmux_mem2reg <= 0;
         ralu_op      <= 1;
+        radjsz_ctrl  <= 0;
         state        <= CALC_PC1;
       end
 
@@ -224,6 +234,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 3;
         rmux_mem2reg <= 0;
         ralu_op      <= 1;
+        radjsz_ctrl  <= 0;
         state        <= CALC_PC2;
       end
 
@@ -243,6 +254,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 3;
         rmux_mem2reg <= 0;
         ralu_op      <= 1;
+        radjsz_ctrl  <= 0;
         state        <= CALC_PC3;
       end
 
@@ -262,6 +274,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 3;
         rmux_mem2reg <= 0;
         ralu_op      <= 1;
+        radjsz_ctrl  <= 0;
         state        <= (opcode == 6'h0) ? ALU_INST :
                         (opcode == 6'h8) ? ADDI :
                         (opcode == 6'hf) ? LUI :
@@ -284,6 +297,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 0;
         rmux_mem2reg <= (opcode == 6'hf) ? 2 : 1;
         ralu_op      <= 0;
+        radjsz_ctrl  <= 0;
         state        <= SAVE_MEM2;
       end
 
@@ -303,6 +317,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 0;
         rmux_mem2reg <= (opcode == 6'hf) ? 2 : 1;
         ralu_op      <= 0;
+        radjsz_ctrl  <= 0;
         state        <= READ_MEM1;
       end
 
@@ -322,6 +337,7 @@ always @(posedge clk, posedge rst) begin
         rmux_alusrcB <= 2;
         rmux_mem2reg <= 0;
         ralu_op      <= 1;
+        radjsz_ctrl  <= 0;
         state        <= SAVE_MEM1;
       end
 
@@ -344,6 +360,7 @@ always @(posedge clk, posedge rst) begin
                         (funct == 6'h22) ? 2 :
                         (funct == 6'h24) ? 3 :
                         0;
+        radjsz_ctrl  <= 0;
         state        <= SAVE_MEM1;
       end
 

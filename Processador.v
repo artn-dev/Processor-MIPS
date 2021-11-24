@@ -26,6 +26,11 @@ wire [4:0]  ins_rs;
 wire [4:0]  ins_rt;
 wire [15:0] ins_imm;
 
+// Ajuste de Tamanho
+wire [1:0]  adjsz_ctrl;
+wire [31:0] adjsz_in;
+wire [31:0] adjsz_out;
+
 // Banco de Registros
 wire reg_write;
 wire [4:0]  reg_rreg1;
@@ -101,6 +106,7 @@ Control CTRL(
   mux_IorD,
   mux_regdst,
   mux_alusrcB,
+  adjsz_ctrl,
   mux_mem2reg,
   alu_op
 );
@@ -170,6 +176,14 @@ MUX4x1_5b mux2(
   5'd31,
   mux_regdst,
   reg_wreg
+);
+
+assign adjsize_in = mdr_out;
+
+AdjSize ADJSIZE(
+  adjsz_in,
+  adjsz_ctrl,
+  adjsz_out
 );
 
 MUX7x1 mux3(
