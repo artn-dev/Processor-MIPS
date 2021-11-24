@@ -163,13 +163,18 @@ always @(posedge clk, posedge rst) begin
 
       READ_MEM2: begin
 	rpc_load     <= 0;
+	rregA_load   <= 1;
+	rregB_load   <= 1;
         state        <= READ_MEM3;
       end
 
       READ_MEM3: begin
 	rins_load    <= 0;
-	state        <= (opcode == 6'hf) ? LUI  :
-			(opcode == 6'h8) ? ADDI :
+	rregA_load   <= 0;
+	rregB_load   <= 0;
+	state        <= (opcode == 6'hf) ? LUI      :
+			(opcode == 6'h8) ? ADDI     :
+			(opcode == 6'h0) ? ALU_INST :
 		        DECODE;
       end
 
@@ -189,8 +194,21 @@ always @(posedge clk, posedge rst) begin
         state        <= SAVE_MEM1;
       end
 
+      ALU_INST: begin
+	rmux_alusrcA <= 1;
+	rmux_alusrcB <= 0;
+	ralu_op      <= (funct == 6'h20) ? 1 :
+			(funct == 6'h22) ? 2 :
+			(funct == 6'h24) ? 3 :
+			0;
+	raluout_load <= 1;
+	rmux_regdst  <= 1;
+	rmux_mem2reg <= 1;
+        state        <= SAVE_MEM1;
+      end
+
       SAVE_MEM1: begin
-	rreg_write <= 1;	
+	rreg_write <= 1;
         state        <= SAVE_MEM2;
       end
 
@@ -218,10 +236,6 @@ always @(posedge clk, posedge rst) begin
                         (opcode == 6'hf)  ? LUI      :
 			(opcode == 6'h23) ? LOAD1     :
                         0;
-      end
-
-      ALU_INST: begin
-        state        <= SAVE_MEM1;
       end
 
       LOAD1: begin
