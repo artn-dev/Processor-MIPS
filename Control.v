@@ -35,9 +35,10 @@ parameter ALU_INST = 5'b01001;
 parameter LOAD1    = 5'b01010;
 parameter LOAD2    = 5'b01011;
 parameter LOAD3    = 5'b01100;
-parameter LOAD4    = 5'b01101;
-parameter LOAD5    = 5'b01110;
-parameter LUI      = 5'b01111;
+parameter LUI      = 5'b01101;
+parameter LW       = 5'b01111;
+parameter LH       = 5'b10000;
+parameter LB       = 5'b10001;
 
 
 reg rpc_load;
@@ -172,9 +173,9 @@ always @(posedge clk, posedge rst) begin
 	state        <= (opcode == 6'hf)  ? LUI      :
 			(opcode == 6'h8)  ? ADDI     :
 			(opcode == 6'h0)  ? ALU_INST :
-			(opcode == 6'h23) ? LOAD1    :
-			(opcode == 6'h21) ? LOAD1    :
-			(opcode == 6'h20) ? LOAD1    :
+			(opcode == 6'h23) ? LW       :
+			(opcode == 6'h21) ? LH       :
+			(opcode == 6'h20) ? LB       :
 		        TMP;
       end
 
@@ -207,6 +208,21 @@ always @(posedge clk, posedge rst) begin
         state        <= SAVE1;
       end
 
+      LW: begin
+	radjsz_ctrl  <= 0;
+        state        <= LOAD1;
+      end
+
+      LH: begin
+	radjsz_ctrl  <= 2;
+        state        <= LOAD1;
+      end
+
+      LB: begin
+	radjsz_ctrl  <= 1;
+        state        <= LOAD1;
+      end
+
       LOAD1: begin
 	rmux_alusrcA <= 1;
 	rmux_alusrcB <= 2;
@@ -214,17 +230,12 @@ always @(posedge clk, posedge rst) begin
 	raluout_load <= 1;
 	rmux_IorD    <= 1;
 	rmdr_load    <= 1;
-	radjsz_ctrl  <= (opcode == 6'h20) ? 1 :
-		        (opcode == 6'h21) ? 2 :
-			0;
         state        <= LOAD2;
       end
 
       LOAD2: state   <= LOAD3;
-      LOAD3: state   <= LOAD4;
-      LOAD4: state   <= LOAD5;
 
-      LOAD5: begin
+      LOAD3: begin
 	rmux_regdst  <= 0;
 	rmux_mem2reg <= 0;
         state        <= SAVE1;
