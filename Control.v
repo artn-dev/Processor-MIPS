@@ -21,26 +21,23 @@ module Control(
 	output wire [2:0] alu_op
 );
 
-parameter RESET     = 5'b00000;
-parameter START     = 5'b00001;
-parameter READ_MEM1 = 5'b00010;
-parameter READ_MEM2 = 5'b00011;
-parameter READ_MEM3 = 5'b00100;
-parameter DECODE    = 5'b00101;
-parameter CALC_PC1  = 5'b00110;
-parameter CALC_PC2  = 5'b00111;
-parameter CALC_PC3  = 5'b01000;
-parameter SAVE_MEM1 = 5'b01001;
-parameter SAVE_MEM2 = 5'b01010;
+parameter RESET    = 5'b00000;
+parameter START    = 5'b00001;
+parameter FETCH1   = 5'b00010;
+parameter FETCH2   = 5'b00011;
+parameter DECODE   = 5'b00100;
+parameter TMP      = 5'b00101;
+parameter SAVE1    = 5'b00110;
+parameter SAVE2    = 5'b00111;
 
-parameter ADDI      = 5'b01011;
-parameter ALU_INST  = 5'b01100;
-parameter LOAD1     = 5'b01101;
-parameter LOAD2     = 5'b01110;
-parameter LOAD3     = 5'b01111;
-parameter LOAD4     = 5'b10000;
-parameter LOAD5     = 5'b10001;
-parameter LUI       = 5'b10010;
+parameter ADDI     = 5'b01000;
+parameter ALU_INST = 5'b01001;
+parameter LOAD1    = 5'b01010;
+parameter LOAD2    = 5'b01011;
+parameter LOAD3    = 5'b01100;
+parameter LOAD4    = 5'b01101;
+parameter LOAD5    = 5'b01110;
+parameter LUI      = 5'b01111;
 
 
 reg rpc_load;
@@ -146,10 +143,10 @@ always @(posedge clk, posedge rst) begin
         rmux_mem2reg <= 0;
         ralu_op      <= 0;
         radjsz_ctrl  <= 0;
-        state        <= READ_MEM1;
+        state        <= FETCH1;
       end
 
-      READ_MEM1: begin
+      FETCH1: begin
         rmem_write   <= 0;
 	rmux_IorD    <= 0;
 	rins_load    <= 1;
@@ -158,17 +155,17 @@ always @(posedge clk, posedge rst) begin
 	rmux_pcin    <= 0;
 	ralu_op      <= 1;
 	rpc_load     <= 1;
-        state        <= READ_MEM2;
+        state        <= FETCH2;
       end
 
-      READ_MEM2: begin
+      FETCH2: begin
 	rpc_load     <= 0;
 	rregA_load   <= 1;
 	rregB_load   <= 1;
-        state        <= READ_MEM3;
+        state        <= DECODE;
       end
 
-      READ_MEM3: begin
+      DECODE: begin
 	rins_load    <= 0;
 	rregA_load   <= 0;
 	rregB_load   <= 0;
@@ -176,7 +173,7 @@ always @(posedge clk, posedge rst) begin
 			(opcode == 6'h8)  ? ADDI     :
 			(opcode == 6'h0)  ? ALU_INST :
 			(opcode == 6'h23) ? LOAD1    :
-		        DECODE;
+		        TMP;
       end
 
       ADDI: begin
@@ -186,13 +183,13 @@ always @(posedge clk, posedge rst) begin
 	raluout_load <= 1;
 	rmux_regdst  <= 0;
 	rmux_mem2reg <= 1;
-        state        <= SAVE_MEM1;
+        state        <= SAVE1;
       end
 
       LUI: begin
 	rmux_regdst  <= 0;
 	rmux_mem2reg <= 2;
-        state        <= SAVE_MEM1;
+        state        <= SAVE1;
       end
 
       ALU_INST: begin
@@ -205,7 +202,7 @@ always @(posedge clk, posedge rst) begin
 	raluout_load <= 1;
 	rmux_regdst  <= 1;
 	rmux_mem2reg <= 1;
-        state        <= SAVE_MEM1;
+        state        <= SAVE1;
       end
 
       LOAD1: begin
@@ -225,21 +222,21 @@ always @(posedge clk, posedge rst) begin
       LOAD5: begin
 	rmux_regdst  <= 0;
 	rmux_mem2reg <= 0;
-        state        <= SAVE_MEM1;
+        state        <= SAVE1;
       end
 
-      SAVE_MEM1: begin
+      SAVE1: begin
 	rreg_write   <= 1;
-        state        <= SAVE_MEM2;
+        state        <= SAVE2;
       end
 
-      SAVE_MEM2: begin
+      SAVE2: begin
 	rreg_write   <= 0;
-        state        <= READ_MEM1;
+        state        <= FETCH1;
       end
 
-      DECODE: begin
-        state        <= CALC_PC1;
+      TMP: begin
+        state        <= FETCH1;
       end
 
     endcase
