@@ -172,9 +172,10 @@ always @(posedge clk, posedge rst) begin
 	rins_load    <= 0;
 	rregA_load   <= 0;
 	rregB_load   <= 0;
-	state        <= (opcode == 6'hf) ? LUI      :
-			(opcode == 6'h8) ? ADDI     :
-			(opcode == 6'h0) ? ALU_INST :
+	state        <= (opcode == 6'hf)  ? LUI      :
+			(opcode == 6'h8)  ? ADDI     :
+			(opcode == 6'h0)  ? ALU_INST :
+			(opcode == 6'h23) ? LOAD1    :
 		        DECODE;
       end
 
@@ -207,8 +208,28 @@ always @(posedge clk, posedge rst) begin
         state        <= SAVE_MEM1;
       end
 
+      LOAD1: begin
+	rmux_alusrcA <= 1;
+	rmux_alusrcB <= 2;
+	ralu_op      <= 1;
+	raluout_load <= 1;
+	rmux_IorD    <= 1;
+	rmdr_load    <= 1;
+        state        <= LOAD2;
+      end
+
+      LOAD2: state   <= LOAD3;
+      LOAD3: state   <= LOAD4;
+      LOAD4: state   <= LOAD5;
+
+      LOAD5: begin
+	rmux_regdst  <= 0;
+	rmux_mem2reg <= 0;
+        state        <= SAVE_MEM1;
+      end
+
       SAVE_MEM1: begin
-	rreg_write <= 1;
+	rreg_write   <= 1;
         state        <= SAVE_MEM2;
       end
 
@@ -217,45 +238,8 @@ always @(posedge clk, posedge rst) begin
         state        <= READ_MEM1;
       end
 
-
       DECODE: begin
         state        <= CALC_PC1;
-      end
-
-      CALC_PC1: begin
-        state        <= CALC_PC2;
-      end
-
-      CALC_PC2: begin
-        state        <= CALC_PC3;
-      end
-
-      CALC_PC3: begin
-        state        <= (opcode == 6'h0)  ? ALU_INST :
-                        (opcode == 6'h8)  ? ADDI     :
-                        (opcode == 6'hf)  ? LUI      :
-			(opcode == 6'h23) ? LOAD1     :
-                        0;
-      end
-
-      LOAD1: begin
-        state        <= LOAD2;
-      end
-
-      LOAD2: begin
-        state        <= LOAD3;
-      end
-
-      LOAD3: begin
-        state        <= LOAD4;
-      end
-
-      LOAD4: begin
-        state        <= LOAD5;
-      end
-
-      LOAD5: begin
-        state        <= SAVE_MEM1;
       end
 
     endcase
