@@ -130,8 +130,8 @@ MUX4x1 mux0(
 );
 
 MUX2x1 mux1(
-  regB_out,
   0,            // TODO salvar meia-palavra/byte
+  regB_out,
   mux_memdata,
   mem_in
 );

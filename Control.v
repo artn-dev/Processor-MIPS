@@ -39,6 +39,7 @@ parameter LUI      = 5'b01101;
 parameter LW       = 5'b01111;
 parameter LH       = 5'b10000;
 parameter LB       = 5'b10001;
+parameter SW       = 5'b10010;
 
 
 reg rpc_load;
@@ -176,6 +177,7 @@ always @(posedge clk, posedge rst) begin
 			(opcode == 6'h23) ? LW       :
 			(opcode == 6'h21) ? LH       :
 			(opcode == 6'h20) ? LB       :
+                        (opcode == 6'h2b) ? SW       :
 		        TMP;
       end
 
@@ -241,8 +243,21 @@ always @(posedge clk, posedge rst) begin
         state        <= SAVE1;
       end
 
+      SW: begin
+	rmux_alusrcA <= 1;
+	rmux_alusrcB <= 2;
+	ralu_op      <= 1;
+	raluout_load <= 1;
+	rmux_IorD    <= 1;
+	rmdr_load    <= 1;
+        rmux_memdata <= 0;
+        rmem_write   <= 1;
+        state        <= SAVE1;
+      end
+
       SAVE1: begin
 	rreg_write   <= 1;
+        rmem_write   <= 0;
 	rmux_IorD    <= 0;
         state        <= SAVE2;
       end
