@@ -162,17 +162,19 @@ always @(posedge clk, posedge rst) begin
 	rpc_load     <= 0;
 	rregA_load   <= 1;
 	rregB_load   <= 1;
-        state        <= DECODE;
+	rins_load    <= 0;
+	state        <= DECODE;
       end
 
       DECODE: begin
-	rins_load    <= 0;
 	rregA_load   <= 0;
 	rregB_load   <= 0;
 	state        <= (opcode == 6'hf)  ? LUI      :
 			(opcode == 6'h8)  ? ADDI     :
 			(opcode == 6'h0)  ? ALU_INST :
 			(opcode == 6'h23) ? LOAD1    :
+			(opcode == 6'h21) ? LOAD1    :
+			(opcode == 6'h20) ? LOAD1    :
 		        TMP;
       end
 
@@ -212,6 +214,9 @@ always @(posedge clk, posedge rst) begin
 	raluout_load <= 1;
 	rmux_IorD    <= 1;
 	rmdr_load    <= 1;
+	radjsz_ctrl  <= (opcode == 6'h20) ? 1 :
+		        (opcode == 6'h21) ? 2 :
+			0;
         state        <= LOAD2;
       end
 
@@ -227,6 +232,7 @@ always @(posedge clk, posedge rst) begin
 
       SAVE1: begin
 	rreg_write   <= 1;
+	rmux_IorD    <= 0;
         state        <= SAVE2;
       end
 
