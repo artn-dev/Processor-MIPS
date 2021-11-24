@@ -40,8 +40,7 @@ parameter LOAD2     = 5'b01110;
 parameter LOAD3     = 5'b01111;
 parameter LOAD4     = 5'b10000;
 parameter LOAD5     = 5'b10001;
-
-parameter LUI       = SAVE_MEM1;
+parameter LUI       = 5'b10010;
 
 
 reg rpc_load;
@@ -151,149 +150,69 @@ always @(posedge clk, posedge rst) begin
       end
 
       READ_MEM1: begin
-        rpc_load     <= 0;
         rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmdr_load    <= 1;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 1;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
+	rmux_IorD    <= 0;
+	rins_load    <= 1;
+	rmux_alusrcA <= 0;
+	rmux_alusrcB <= 1;
+	rmux_pcin    <= 0;
+	ralu_op      <= 1;
+	rpc_load     <= 1;
         state        <= READ_MEM2;
       end
 
       READ_MEM2: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmdr_load    <= 1;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 1;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
+	rpc_load     <= 0;
         state        <= READ_MEM3;
       end
 
       READ_MEM3: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmdr_load    <= 1;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 1;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
-        state        <= DECODE;
+	rins_load    <= 0;
+	state        <= (opcode == 6'hf) ? LUI  :
+			(opcode == 6'h8) ? ADDI :
+		        DECODE;
       end
 
+      ADDI: begin
+	rmux_alusrcA <= 1;
+	rmux_alusrcB <= 2;
+	ralu_op      <= 1;
+	raluout_load <= 1;
+	rmux_regdst  <= 0;
+	rmux_mem2reg <= 1;
+        state        <= SAVE_MEM1;
+      end
+
+      LUI: begin
+	rmux_regdst  <= 0;
+	rmux_mem2reg <= 2;
+        state        <= SAVE_MEM1;
+      end
+
+      SAVE_MEM1: begin
+	rreg_write <= 1;	
+        state        <= SAVE_MEM2;
+      end
+
+      SAVE_MEM2: begin
+	rreg_write   <= 0;
+        state        <= READ_MEM1;
+      end
+
+
       DECODE: begin
-        rpc_load     <= 1;
-        rmem_write   <= 0;
-        rins_load    <= 1;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmdr_load    <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 1;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
         state        <= CALC_PC1;
       end
 
       CALC_PC1: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmdr_load    <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 3;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
         state        <= CALC_PC2;
       end
 
       CALC_PC2: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmdr_load    <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 3;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
         state        <= CALC_PC3;
       end
 
       CALC_PC3: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 1;
-        rregB_load   <= 1;
-        raluout_load <= 1;
-        rmdr_load    <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 3;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
         state        <= (opcode == 6'h0)  ? ALU_INST :
                         (opcode == 6'h8)  ? ADDI     :
                         (opcode == 6'hf)  ? LUI      :
@@ -301,199 +220,27 @@ always @(posedge clk, posedge rst) begin
                         0;
       end
 
-      SAVE_MEM1: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 1;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmdr_load    <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= (opcode == 0) ? 1 : 0;
-        rmux_alusrcB <= 0;
-        rmux_mem2reg <= (opcode == 6'hf)  ? 2 :
-		        (opcode == 6'h23) ? 0 :
-			1;
-        ralu_op      <= 0;
-        radjsz_ctrl  <= 0;
-        state        <= SAVE_MEM2;
-      end
-
-      SAVE_MEM2: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 1;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmdr_load    <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= (opcode == 0) ? 1 : 0;
-        rmux_alusrcB <= 0;
-        rmux_mem2reg <= (opcode == 6'hf)  ? 2 :
-		        (opcode == 6'h23) ? 0 :
-			1;
-        ralu_op      <= 0;
-        radjsz_ctrl  <= 0;
-        state        <= READ_MEM1;
-      end
-
-      ADDI: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 1;
-        rmdr_load    <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 1;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 2;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
-        state        <= SAVE_MEM1;
-      end
-
       ALU_INST: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 1;
-        rmdr_load    <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 1;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 0;
-        rmux_mem2reg <= 0;
-        ralu_op      <= (funct == 6'h20) ? 1 :
-                        (funct == 6'h22) ? 2 :
-                        (funct == 6'h24) ? 3 :
-                        0;
-        radjsz_ctrl  <= 0;
         state        <= SAVE_MEM1;
       end
 
       LOAD1: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 1;
-        rmdr_load    <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 1;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 2;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
         state        <= LOAD2;
       end
 
       LOAD2: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmdr_load    <= 1;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 1;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 1;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 2;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
         state        <= LOAD3;
       end
 
       LOAD3: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmdr_load    <= 1;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 1;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 1;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 2;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
         state        <= LOAD4;
       end
 
       LOAD4: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmdr_load    <= 1;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 1;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 1;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
         state        <= LOAD5;
       end
 
       LOAD5: begin
-        rpc_load     <= 0;
-        rmem_write   <= 1;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmdr_load    <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 1;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        radjsz_ctrl  <= 0;
         state        <= SAVE_MEM1;
       end
 
