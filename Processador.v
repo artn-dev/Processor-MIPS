@@ -13,6 +13,11 @@ wire [31:0] mem_addr;
 wire [31:0] mem_in;
 wire [31:0] mem_out;
 
+// Mem Overwrite
+wire [1:0]  memow_ctrl;
+wire [31:0] memow_in;
+wire [31:0] memow_out;
+
 // MDR
 wire mdr_load;
 wire [31:0] mdr_in;
@@ -75,7 +80,6 @@ wire [27:0] concat_in;
 wire [31:0] concat_out;
 
 // MUX
-wire mux_memdata;
 wire mux_alusrcA;
 wire [1:0] mux_pcin;
 wire [1:0] mux_IorD;
@@ -101,13 +105,13 @@ Control CTRL(
   regB_load,
   aluout_load,
   mdr_load,
-  mux_memdata,
   mux_alusrcA,
   mux_pcin,
   mux_IorD,
   mux_regdst,
   mux_alusrcB,
   adjsz_ctrl,
+  memow_ctrl,
   mux_mem2reg,
   alu_op
 );
@@ -129,12 +133,16 @@ MUX4x1 mux0(
   mem_addr
 );
 
-MUX2x1 mux1(
-  0,            // TODO salvar meia-palavra/byte
-  regB_out,
-  mux_memdata,
-  mem_in
+assign memow_in = regB_out;
+
+MemOverwrite MEMOW(
+  memow_in,
+  mem_out,
+  memow_ctrl,
+  memow_out
 );
+
+assign mem_in = memow_out;
 
 Memoria MEM(
   mem_addr,
