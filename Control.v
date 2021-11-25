@@ -45,6 +45,8 @@ parameter SAVE_MEM2 = 5'b10100;
 parameter SAVE_MEM3 = 5'b10101;
 parameter SAVE_MEM4 = 5'b10110;
 parameter SAVE_MEM5 = 5'b10111;
+parameter JUMP_J1   = 5'b11000;
+parameter JUMP_J2   = 5'b11001;
 
 
 reg rpc_load;
@@ -186,6 +188,7 @@ always @(posedge clk, posedge rst) begin
                           (opcode == 6'h2b) ? SW       :
                           (opcode == 6'h29) ? SH       :
                           (opcode == 6'h28) ? SB       :
+                          (opcode == 6'h2)  ? JUMP_J1  :
 		          FETCH1;
       end
 
@@ -298,6 +301,18 @@ always @(posedge clk, posedge rst) begin
 	state          <= SAVE_MEM5;
       end
       SAVE_MEM5: state <= FETCH1;
+
+      JUMP_J1: begin
+        rmux_pcin      <= 2;
+        rpc_load       <= 1;
+        state          <= JUMP_J2;
+      end
+
+      JUMP_J2: begin
+        rmux_pcin      <= 0;
+        rpc_load       <= 0;
+        state          <= FETCH1;
+      end
 
     endcase
   end
