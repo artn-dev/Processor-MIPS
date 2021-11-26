@@ -21,36 +21,34 @@ module Control(
 	output wire [2:0] alu_op
 );
 
-parameter RESET     = 5'b00000;
-parameter START     = 5'b00001;
-parameter FETCH1    = 5'b00010;
-parameter FETCH2    = 5'b00011;
-parameter DECODE    = 5'b00100;
-parameter SAVE_REG1 = 5'b00101;
-parameter SAVE_REG2 = 5'b00110;
-parameter ADDI      = 5'b00111;
-parameter ALU_INST  = 5'b01000;
-parameter LOAD1     = 5'b01001;
-parameter LOAD2     = 5'b01010;
-parameter LOAD3     = 5'b01011;
-parameter LUI       = 5'b01100;
-parameter LW        = 5'b01101;
-parameter LH        = 5'b01110;
-parameter LB        = 5'b01111;
-parameter SW        = 5'b10000;
-parameter SH        = 5'b10001;
-parameter SB        = 5'b10010;
-parameter SAVE_MEM1 = 5'b10011;
-parameter SAVE_MEM2 = 5'b10100;
-parameter SAVE_MEM3 = 5'b10101;
-parameter SAVE_MEM4 = 5'b10110;
-parameter SAVE_MEM5 = 5'b10111;
-parameter JUMP_J1   = 5'b11000;
-parameter JUMP_J2   = 5'b11001;
-parameter JUMP_JAL1 = 5'b11010;
-parameter JUMP_JAL2 = 5'b11011;
-parameter JUMP_JAL3 = 5'b11100;
-parameter JUMP_JAL4 = 5'b11101;
+parameter RESET      = 5'b00000;
+parameter START      = 5'b00001;
+parameter FETCH1     = 5'b00010;
+parameter FETCH2     = 5'b00011;
+parameter DECODE     = 5'b00100;
+parameter SAVE_REG1  = 5'b00101;
+parameter SAVE_REG2  = 5'b00110;
+parameter ADDI       = 5'b00111;
+parameter ALU_INST   = 5'b01000;
+parameter LOAD1      = 5'b01001;
+parameter LOAD2      = 5'b01010;
+parameter LOAD3      = 5'b01011;
+parameter LUI        = 5'b01100;
+parameter LW         = 5'b01101;
+parameter LH         = 5'b01110;
+parameter LB         = 5'b01111;
+parameter SW         = 5'b10000;
+parameter SH         = 5'b10001;
+parameter SB         = 5'b10010;
+parameter SAVE_MEM1  = 5'b10011;
+parameter SAVE_MEM2  = 5'b10100;
+parameter SAVE_MEM3  = 5'b10101;
+parameter SAVE_MEM4  = 5'b10110;
+parameter SAVE_MEM5  = 5'b10111;
+parameter JUMP1      = 5'b11000;
+parameter JUMP2      = 5'b11001;
+parameter SAVE_INST1 = 5'b11010;
+parameter SAVE_INST2 = 5'b11011;
 
 
 reg rpc_load;
@@ -183,17 +181,17 @@ always @(posedge clk, posedge rst) begin
       DECODE: begin
 	rregA_load     <= 0;
 	rregB_load     <= 0;
-	state          <= (opcode == 6'hf)  ? LUI       :
-			  (opcode == 6'h8)  ? ADDI      :
-			  (opcode == 6'h0)  ? ALU_INST  :
-			  (opcode == 6'h23) ? LW        :
-			  (opcode == 6'h21) ? LH        :
-			  (opcode == 6'h20) ? LB        :
-                          (opcode == 6'h2b) ? SW        :
-                          (opcode == 6'h29) ? SH        :
-                          (opcode == 6'h28) ? SB        :
-                          (opcode == 6'h2)  ? JUMP_J1   :
-                          (opcode == 6'h3)  ? JUMP_JAL1 :
+	state          <= (opcode == 6'hf)  ? LUI        :
+			  (opcode == 6'h8)  ? ADDI       :
+			  (opcode == 6'h0)  ? ALU_INST   :
+			  (opcode == 6'h23) ? LW         :
+			  (opcode == 6'h21) ? LH         :
+			  (opcode == 6'h20) ? LB         :
+                          (opcode == 6'h2b) ? SW         :
+                          (opcode == 6'h29) ? SH         :
+                          (opcode == 6'h28) ? SB         :
+                          (opcode == 6'h2)  ? JUMP1      :
+                          (opcode == 6'h3)  ? SAVE_INST1 :
 		          FETCH1;
       end
 
@@ -307,38 +305,28 @@ always @(posedge clk, posedge rst) begin
       end
       SAVE_MEM5: state <= FETCH1;
 
-      JUMP_J1: begin
+      JUMP1: begin
         rmux_pcin      <= 2;
         rpc_load       <= 1;
-        state          <= JUMP_J2;
+        rreg_write     <= 0;
+        state          <= JUMP2;
       end
-      JUMP_J2: begin
+      JUMP2: begin
         rmux_pcin      <= 0;
         rpc_load       <= 0;
         state          <= FETCH1;
       end
 
-      JUMP_JAL1: begin
+      SAVE_INST1: begin
         rmux_alusrcA   <= 0;
         ralu_op        <= 0;
-        state          <= JUMP_JAL2;
+        state          <= SAVE_INST2;
       end
-      JUMP_JAL2: begin
+      SAVE_INST2: begin
         rreg_write     <= 1;
         rmux_mem2reg   <= 1;
         rmux_regdst    <= 3;
-        state          <= JUMP_JAL3;
-      end
-      JUMP_JAL3: begin
-        rmux_pcin      <= 2;
-        rpc_load       <= 1;
-        rreg_write     <= 0;
-        state          <= JUMP_JAL4;
-      end
-      JUMP_JAL4: begin
-        rmux_pcin      <= 0;
-        rpc_load       <= 0;
-        state          <= FETCH1;
+        state          <= JUMP1;
       end
 
     endcase
