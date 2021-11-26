@@ -2,50 +2,6 @@ module Processador(
         input wire clk, rst
 );
 
-//****************************************************************************//
-//                                 Parâmetros                                //
-//****************************************************************************//
-
-parameter RESET     = 4'b0000;
-parameter START     = 4'b0001;
-parameter READ_MEM1 = 4'b0010;
-parameter READ_MEM2 = 4'b0011;
-parameter READ_MEM3 = 4'b0100;
-parameter DECODE    = 4'b0101;
-parameter CALC_PC1  = 4'b0110;
-parameter CALC_PC2  = 4'b0111;
-parameter CALC_PC3  = 4'b1000;
-parameter SAVE_MEM  = 4'b1001;
-parameter ADD       = 4'b1010;
-
-
-//****************************************************************************//
-//                         Declarações de Registros                         //
-//****************************************************************************//
-
-reg rpc_load;
-reg rmem_write;
-reg rins_load;
-reg rreg_write;
-reg rregA_load;
-reg rregB_load;
-reg raluout_load;
-reg rmux_memdata;
-reg rmux_alusrcA;
-reg [1:0] rmux_pcin;
-reg [1:0] rmux_IorD;
-reg [1:0] rmux_regdst;
-reg [1:0] rmux_alusrcB;
-reg [2:0] rmux_mem2reg;
-reg [2:0] ralu_op;
-
-reg [3:0] state;
-
-
-//****************************************************************************//
-//                            Declarações de Fios                           //
-//****************************************************************************//
-
 // PC (Contador de Programa)
 wire pc_load;
 wire [31:0] pc_in;
@@ -57,6 +13,16 @@ wire [31:0] mem_addr;
 wire [31:0] mem_in;
 wire [31:0] mem_out;
 
+// Mem Overwrite
+wire [1:0]  memow_ctrl;
+wire [31:0] memow_in;
+wire [31:0] memow_out;
+
+// MDR
+wire mdr_load;
+wire [31:0] mdr_in;
+wire [31:0] mdr_out;
+
 // Registro de Instruções
 wire ins_load;
 wire [31:0] ins_in;
@@ -64,6 +30,11 @@ wire [5:0]  ins_opcode;
 wire [4:0]  ins_rs;
 wire [4:0]  ins_rt;
 wire [15:0] ins_imm;
+
+// Ajuste de Tamanho
+wire [1:0]  adjsz_ctrl;
+wire [31:0] adjsz_in;
+wire [31:0] adjsz_out;
 
 // Banco de Registros
 wire reg_write;
@@ -108,19 +79,53 @@ wire [25:0] concat_insaddr;
 wire [27:0] concat_in;
 wire [31:0] concat_out;
 
+// Registrador de Deslocamento
+wire [2:0]  des_op;
+wire [4:0]  des_n;
+wire [31:0] des_in;
+wire [31:0] des_out;
+
 // MUX
-wire mux_memdata;
 wire mux_alusrcA;
+wire mux_desin;
 wire [1:0] mux_pcin;
 wire [1:0] mux_IorD;
 wire [1:0] mux_regdst;
 wire [1:0] mux_alusrcB;
+wire [1:0] mux_desn;
 wire [2:0] mux_mem2reg;
 
 
 //****************************************************************************//
 //                                 Componentes                                //
 //****************************************************************************//
+
+Control CTRL(
+  clk,
+  rst,
+  ins_opcode,
+  ins_imm[5:0],
+  pc_load,
+  mem_write,
+  ins_load,
+  reg_write,
+  regA_load,
+  regB_load,
+  aluout_load,
+  mdr_load,
+  mux_alusrcA,
+  mux_desin,
+  mux_pcin,
+  mux_IorD,
+  mux_regdst,
+  mux_alusrcB,
+  adjsz_ctrl,
+  memow_ctrl,
+  mux_desn,
+  mux_mem2reg,
+  alu_op,
+  des_op
+);
 
 Registrador PC(
   clk,
@@ -139,12 +144,16 @@ MUX4x1 mux0(
   mem_addr
 );
 
-MUX2x1 mux1(
-  regB_out,
-  0,            // TODO salvar meia-palavra/byte
-  mux_memdata,
-  mem_in
+assign memow_in = regB_out;
+
+MemOverwrite MEMOW(
+  memow_in,
+  mem_out,
+  memow_ctrl,
+  memow_out
 );
+
+assign mem_in = memow_out;
 
 Memoria MEM(
   mem_addr,
@@ -155,6 +164,15 @@ Memoria MEM(
 );
 
 assign ins_in = mem_out;
+assign mdr_in = mem_out;
+
+Registrador MDR(
+  clk,
+  rst,
+  mdr_load,
+  mdr_in,
+  mdr_out
+);
 
 Instr_Reg IR(
   clk,
@@ -180,13 +198,49 @@ MUX4x1_5b mux2(
   reg_wreg
 );
 
+assign adjsz_in = mdr_out;
+
+AdjSize ADJSIZE(
+  adjsz_in,
+  adjsz_ctrl,
+  adjsz_out
+);
+
+MUX2x1 mux7(
+  regB_out,
+  regA_out,
+  mux_desin,
+  des_in
+);
+
+MUX4x1_5b mux8(
+  ins_imm[10:6],
+  regB_out[6:0],
+  5'd0,
+  5'd0,
+  mux_desn,
+  des_n
+);
+
+RegDesloc REGDESLOC(
+  clk,
+  rst,
+  des_op,
+  des_n,
+  des_in,
+  des_out
+);
+
+wire [31:0] shifted_imm;
+assign shifted_imm = ins_imm << 16;
+
 MUX7x1 mux3(
-  0,                    // TODO ler memória
+  adjsz_out,
   aluout_out,
-  0,                    // TODO ler imediato
+  shifted_imm,
   0,                    // TODO implementar multiplicação/divisão
   0,                    // TODO ler flags da ULA
-  0,                    // TODO implementar shift
+  des_out,
   227,
   mux_mem2reg,
   reg_wdata
@@ -277,259 +331,5 @@ MUX4x1 mux6(
   mux_pcin,
   pc_in
 );
-
-
-assign pc_load     = rpc_load;
-assign mem_write   = rmem_write;
-assign ins_load    = rins_load;
-assign reg_write   = rreg_write;
-assign regA_load   = rregA_load;
-assign regB_load   = rregB_load;
-assign aluout_load = raluout_load;
-assign mux_memdata = rmux_memdata;
-assign mux_alusrcA = rmux_alusrcA;
-assign mux_pcin    = rmux_pcin;
-assign mux_IorD    = rmux_IorD;
-assign mux_regdst  = rmux_regdst;
-assign mux_alusrcB = rmux_alusrcB;
-assign mux_mem2reg = rmux_mem2reg;
-assign alu_op      = ralu_op;
-
-
-
-always @(posedge clk, posedge rst) begin
-  if (rst) begin
-    rpc_load     <= 0;
-    rmem_write   <= 0;
-    rins_load    <= 0;
-    rreg_write   <= 0;
-    rregA_load   <= 0;
-    rregB_load   <= 0;
-    raluout_load <= 0;
-    rmux_memdata <= 0;
-    rmux_alusrcA <= 0;
-    rmux_pcin    <= 0;
-    rmux_IorD    <= 0;
-    rmux_regdst  <= 0;
-    rmux_alusrcB <= 0;
-    rmux_mem2reg <= 0;
-    ralu_op      <= 0;
-    state        <= START;
-
-  end else begin
-    case (state)
-
-      START: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 1;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 2;
-        rmux_alusrcB <= 0;
-        rmux_mem2reg <= 6;
-        ralu_op      <= 0;
-        state        <= RESET;
-      end
-
-      RESET: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 0;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 0;
-        state        <= READ_MEM1;
-      end
-
-      READ_MEM1: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 1;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        state        <= READ_MEM2;
-      end
-
-      READ_MEM2: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 1;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        state        <= READ_MEM3;
-      end
-
-      READ_MEM3: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 1;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        state        <= DECODE;
-      end
-
-      DECODE: begin
-        rpc_load     <= 1;
-        rmem_write   <= 0;
-        rins_load    <= 1;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 1;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        state        <= CALC_PC1;
-      end
-
-      CALC_PC1: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 3;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        state        <= CALC_PC2;
-      end
-
-      CALC_PC2: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 3;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        state        <= CALC_PC3;
-      end
-
-      CALC_PC3: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 1;
-        rregB_load   <= 1;
-        raluout_load <= 1;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 3;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        state        <= ADD;
-      end
-
-      ADD: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 0;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 1;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 1;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 2;
-        rmux_mem2reg <= 0;
-        ralu_op      <= 1;
-        state        <= SAVE_MEM;
-      end
-
-      SAVE_MEM: begin
-        rpc_load     <= 0;
-        rmem_write   <= 0;
-        rins_load    <= 0;
-        rreg_write   <= 1;
-        rregA_load   <= 0;
-        rregB_load   <= 0;
-        raluout_load <= 0;
-        rmux_memdata <= 0;
-        rmux_alusrcA <= 0;
-        rmux_pcin    <= 0;
-        rmux_IorD    <= 0;
-        rmux_regdst  <= 0;
-        rmux_alusrcB <= 0;
-        rmux_mem2reg <= 1;
-        ralu_op      <= 0;
-        state        <= READ_MEM1;
-      end
-
-    endcase
-  end
-end
 
 endmodule
