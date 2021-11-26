@@ -11,45 +11,50 @@ module Control(
 	output wire aluout_load,
 	output wire mdr_load,
 	output wire mux_alusrcA,
+        output wire mux_desin,
 	output wire [1:0] mux_pcin,
 	output wire [1:0] mux_IorD,
 	output wire [1:0] mux_regdst,
 	output wire [1:0] mux_alusrcB,
 	output wire [1:0] adjsz_ctrl,
 	output wire [1:0] memow_ctrl,
+        output wire [1:0] mux_desn,
 	output wire [2:0] mux_mem2reg,
-	output wire [2:0] alu_op
+	output wire [2:0] alu_op,
+        output wire [2:0] des_op
 );
 
-parameter RESET      = 5'b00000;
-parameter START      = 5'b00001;
-parameter FETCH1     = 5'b00010;
-parameter FETCH2     = 5'b00011;
-parameter DECODE     = 5'b00100;
-parameter SAVE_REG1  = 5'b00101;
-parameter SAVE_REG2  = 5'b00110;
-parameter ADDI       = 5'b00111;
-parameter ALU_INST   = 5'b01000;
-parameter LOAD1      = 5'b01001;
-parameter LOAD2      = 5'b01010;
-parameter LOAD3      = 5'b01011;
-parameter LUI        = 5'b01100;
-parameter LW         = 5'b01101;
-parameter LH         = 5'b01110;
-parameter LB         = 5'b01111;
-parameter SW         = 5'b10000;
-parameter SH         = 5'b10001;
-parameter SB         = 5'b10010;
-parameter SAVE_MEM1  = 5'b10011;
-parameter SAVE_MEM2  = 5'b10100;
-parameter SAVE_MEM3  = 5'b10101;
-parameter SAVE_MEM4  = 5'b10110;
-parameter SAVE_MEM5  = 5'b10111;
-parameter JUMP1      = 5'b11000;
-parameter JUMP2      = 5'b11001;
-parameter SAVE_INST1 = 5'b11010;
-parameter SAVE_INST2 = 5'b11011;
-parameter JR         = 5'b11100;
+parameter RESET      = 5'd0;
+parameter START      = 5'd1;
+parameter FETCH1     = 5'd2;
+parameter FETCH2     = 5'd3;
+parameter DECODE     = 5'd4;
+parameter SAVE_REG1  = 5'd5;
+parameter SAVE_REG2  = 5'd6;
+parameter ADDI       = 5'd7;
+parameter ALU_INST   = 5'd8;
+parameter LOAD1      = 5'd9;
+parameter LOAD2      = 5'd10;
+parameter LOAD3      = 5'd11;
+parameter LUI        = 5'd12;
+parameter LW         = 5'd13;
+parameter LH         = 5'd14;
+parameter LB         = 5'd15;
+parameter SW         = 5'd16;
+parameter SH         = 5'd17;
+parameter SB         = 5'd18;
+parameter SAVE_MEM1  = 5'd19;
+parameter SAVE_MEM2  = 5'd20;
+parameter SAVE_MEM3  = 5'd21;
+parameter SAVE_MEM4  = 5'd22;
+parameter SAVE_MEM5  = 5'd23;
+parameter JUMP1      = 5'd24;
+parameter JUMP2      = 5'd25;
+parameter SAVE_INST1 = 5'd26;
+parameter SAVE_INST2 = 5'd27;
+parameter JR         = 5'd28;
+parameter SHIFT1     = 5'd29;
+parameter SHIFT2     = 5'd30;
 
 
 reg rpc_load;
@@ -61,16 +66,19 @@ reg rregB_load;
 reg raluout_load;
 reg rmdr_load;
 reg rmux_alusrcA;
+reg rmux_desin;
 reg [1:0] rmux_pcin;
 reg [1:0] rmux_IorD;
 reg [1:0] rmux_regdst;
 reg [1:0] rmux_alusrcB;
 reg [1:0] radjsz_ctrl;
 reg [1:0] rmemow_ctrl;
+reg [1:0] rmux_desn;
 reg [2:0] rmux_mem2reg;
 reg [2:0] ralu_op;
+reg [2:0] rdes_op;
 
-reg [4:0] state;
+reg [5:0] state;
 
 
 assign pc_load     = rpc_load;
@@ -90,6 +98,9 @@ assign alu_op      = ralu_op;
 assign adjsz_ctrl  = radjsz_ctrl;
 assign memow_ctrl  = rmemow_ctrl;
 assign mdr_load    = rmdr_load;
+assign des_op      = rdes_op;
+assign mux_desin   = rmux_desin;
+assign mux_desn    = rmux_desn;
 
 
 always @(posedge clk, posedge rst) begin
@@ -111,6 +122,9 @@ always @(posedge clk, posedge rst) begin
     ralu_op      <= 0;
     radjsz_ctrl  <= 0;
     rmemow_ctrl  <= 0;
+    rdes_op      <= 0;
+    rmux_desn    <= 0;
+    rmux_desin   <= 0;
     state        <= START;
 
   end else begin
@@ -134,6 +148,9 @@ always @(posedge clk, posedge rst) begin
         ralu_op        <= 0;
         radjsz_ctrl    <= 0;
         rmemow_ctrl    <= 0;
+        rdes_op        <= 0;
+        rmux_desn      <= 0;
+        rmux_desin     <= 0;
         state          <= RESET;
       end
 
@@ -155,6 +172,9 @@ always @(posedge clk, posedge rst) begin
         ralu_op        <= 0;
         radjsz_ctrl    <= 0;
         rmemow_ctrl    <= 0;
+        rdes_op        <= 0;
+        rmux_desn      <= 0;
+        rmux_desin     <= 0;
         state          <= FETCH1;
       end
 
@@ -222,7 +242,13 @@ always @(posedge clk, posedge rst) begin
 	raluout_load   <= 1;
 	rmux_regdst    <= 1;
 	rmux_mem2reg   <= 1;
-        state          <= (funct == 6'h8) ? JR : SAVE_REG1;
+        state          <= (funct == 6'h0 ||
+                           funct == 6'h2 ||
+                           funct == 6'h3 ||
+                           funct == 6'h4 ||
+                           funct == 6'h7) ? SHIFT1 :
+                          (funct == 6'h8) ? JR     :
+                          SAVE_REG1;
       end
 
       LW: begin
@@ -258,6 +284,7 @@ always @(posedge clk, posedge rst) begin
 	rreg_write     <= 1;
         rmem_write     <= 0;
 	rmux_IorD      <= 0;
+	rdes_op        <= 0;
         state          <= SAVE_REG2;
       end
       SAVE_REG2: begin
@@ -336,9 +363,24 @@ always @(posedge clk, posedge rst) begin
         state          <= JUMP2;
       end
 
+      SHIFT1: begin
+	rmux_desn      <= (funct == 6'h4 || funct == 6'h7) ? 1 : 0;
+	rmux_desin     <= (funct == 6'h4 || funct == 6'h7) ? 0 : 1;
+        rdes_op        <= 1;
+        state          <= SHIFT2;
+      end
+      SHIFT2: begin
+        rdes_op        <= (funct == 6'h0 || funct == 6'h4) ? 2 :
+			  (funct == 6'h3 || funct == 6'h7) ? 4 :
+			  (funct == 6'h2) ? 3                  :
+		          0;
+        rmux_regdst    <= 1;
+        rmux_mem2reg   <= 5;
+        state          <= SAVE_REG1;
+      end
+
     endcase
   end
 end
-
 
 endmodule
