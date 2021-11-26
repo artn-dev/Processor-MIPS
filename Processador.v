@@ -79,12 +79,20 @@ wire [25:0] concat_insaddr;
 wire [27:0] concat_in;
 wire [31:0] concat_out;
 
+// Registrador de Deslocamento
+wire [2:0]  des_op;
+wire [4:0]  des_n;
+wire [31:0] des_in;
+wire [31:0] des_out;
+
 // MUX
 wire mux_alusrcA;
+wire mux_desin;
 wire [1:0] mux_pcin;
 wire [1:0] mux_IorD;
 wire [1:0] mux_regdst;
 wire [1:0] mux_alusrcB;
+wire [1:0] mux_desn;
 wire [2:0] mux_mem2reg;
 
 
@@ -106,14 +114,17 @@ Control CTRL(
   aluout_load,
   mdr_load,
   mux_alusrcA,
+  mux_desin,
   mux_pcin,
   mux_IorD,
   mux_regdst,
   mux_alusrcB,
   adjsz_ctrl,
   memow_ctrl,
+  mux_desn,
   mux_mem2reg,
-  alu_op
+  alu_op,
+  des_op
 );
 
 Registrador PC(
@@ -195,13 +206,38 @@ AdjSize ADJSIZE(
   adjsz_out
 );
 
+MUX2x1 mux7(
+  regB_out,
+  regA_out,
+  mux_desin,
+  des_in
+);
+
+MUX4x1_5b mux8(
+  ins_imm[10:6],
+  regB_out[6:0],
+  5'd0,
+  5'd0,
+  mux_desn,
+  des_n
+);
+
+RegDesloc REGDESLOC(
+  clk,
+  rst,
+  des_op,
+  des_n,
+  des_in,
+  des_out
+);
+
 MUX7x1 mux3(
   adjsz_out,
   aluout_out,
   { 16'd0, ins_imm },
   0,                    // TODO implementar multiplicação/divisão
   0,                    // TODO ler flags da ULA
-  0,                    // TODO implementar shift
+  des_out,
   227,
   mux_mem2reg,
   reg_wdata
