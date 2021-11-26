@@ -231,10 +231,13 @@ RegDesloc REGDESLOC(
   des_out
 );
 
+wire [31:0] shifted_imm;
+assign shifted_imm = ins_imm << 16;
+
 MUX7x1 mux3(
   adjsz_out,
   aluout_out,
-  { 16'd0, ins_imm },
+  shifted_imm,
   0,                    // TODO implementar multiplicação/divisão
   0,                    // TODO ler flags da ULA
   des_out,
