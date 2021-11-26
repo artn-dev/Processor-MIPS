@@ -49,6 +49,7 @@ parameter JUMP1      = 5'b11000;
 parameter JUMP2      = 5'b11001;
 parameter SAVE_INST1 = 5'b11010;
 parameter SAVE_INST2 = 5'b11011;
+parameter JR         = 5'b11100;
 
 
 reg rpc_load;
@@ -221,7 +222,7 @@ always @(posedge clk, posedge rst) begin
 	raluout_load   <= 1;
 	rmux_regdst    <= 1;
 	rmux_mem2reg   <= 1;
-        state          <= SAVE_REG1;
+        state          <= (funct == 6'h8) ? JR : SAVE_REG1;
       end
 
       LW: begin
@@ -327,6 +328,12 @@ always @(posedge clk, posedge rst) begin
         rmux_mem2reg   <= 1;
         rmux_regdst    <= 3;
         state          <= JUMP1;
+      end
+
+      JR: begin
+        rmux_pcin      <= 1;
+        rpc_load       <= 1;
+        state          <= JUMP2;
       end
 
     endcase
